@@ -1,0 +1,6 @@
+Thumbs.db
+*.swp
+.idea
+*.log
+*.pid
+*.gz

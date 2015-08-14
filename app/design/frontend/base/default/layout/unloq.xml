@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+	<default>
+		<reference name="head">
+			<action method="addCss" ifconfig="unloq_login/status/active">
+				<stylesheet>css/unloq/login.css</stylesheet>
+			</action>
+		</reference>
+    </default>
+	<customer_account_login translate="label">
+        <reference name="content">
+            <block type="login/account" name="unloq_login" template="unloq/login.phtml" />
+        </reference>
+    </customer_account_login>
+
+	<customer_account_create translate="label">
+		<reference name="content">
+			<block type="login/account" name="unloq_register" template="unloq/register.phtml" />
+		</reference>
+	</customer_account_create>
+</layout>

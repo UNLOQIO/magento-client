@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+    <name>Unloq_Login</name>
+    <version>0.1.0</version>
+    <stability>stable</stability>
+    <license uri="http://opensource.org/licenses/OSL-3.0">OSL-3.0</license>
+    <channel>community</channel>
+    <extends/>
+    <summary>UNLOQ.io Passwordless authentication</summary>
+    <description>UNLOQ.io passwordless authentication handled by your phone. For a free account, go to https://account.unloq.io</description>
+    <notes>0.0.0</notes>
+    <authors><author><name>UNLOQ.io team</name><user>unloqer</user><email>team@unloq.io</email></author></authors>
+    <date>2015-08-14</date>
+    <time>13:15:35</time>
+    <contents><target name="magelocal"><dir name="Unloq"><dir name="Login"><dir name="Block"><file name="Account.php" hash="abd30defa1c262a26fc8246edbcdc095"/></dir><dir name="Helper"><file name="Data.php" hash="7597a4b4305b8c05bf3e95919f0b507f"/></dir><dir name="Model"><file name="Observer.php" hash="731f13a716115df8213c7aa8527076c2"/><file name="Options.php" hash="3be8f556165652db4225598109872201"/></dir><dir name="controllers"><file name="UauthController.php" hash="c3376e40b221ce0373dfe8687d27e703"/></dir><dir name="etc"><file name="config.xml" hash="6be16efd64314bed8e51a6231ce023dd"/><file name="system.xml" hash="f765575c21586a0666dd602f261d3c00"/></dir><dir name="sql"><dir name="unloqlogin_setup"><file name="mysql4-install-0.1.0.php" hash="2802bd1c776714b9223378be207cd007"/></dir></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Unloq_Login.xml" hash="f9dc907865df3156d2e3c8eaa7933df8"/></dir></target><target name="magedesign"><dir name="frontend"><dir name="base"><dir name="default"><dir name="template"><dir name="unloq"><file name="login.phtml" hash="ca5073969df01a554d597eb36d35ed94"/><file name="register.phtml" hash="a517c995b82118899c08e043d657506d"/></dir></dir><dir name="layout"><file name="unloq.xml" hash="296d31d87a867a0503bf9d2072c63630"/></dir></dir></dir></dir></target><target name="magelib"><dir name="Unloq"><file name="UnloqApi.php" hash="6f4b35e757e379df334f52d348fde11e"/><file name="UnloqApiResult.php" hash="bf67c1d7ca0cc99abab0946e85867b8f"/></dir></target><target name="mageskin"><dir name="frontend"><dir name="base"><dir name="default"><dir name="css"><dir name="unloq"><file name="login.css" hash="9f408a2202a977cc42693c4e56301507"/></dir></dir></dir></dir></dir></target></contents>
+    <compatible/>
+    <dependencies><required><php><min>5.2.0</min><max>6.0.0</max></php><extension><name>curl</name><min></min><max></max></extension></required></dependencies>
+</package>
