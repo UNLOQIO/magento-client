@@ -11,6 +11,7 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
      * */
     public function loginAction() {
         $request = Mage::app()->getRequest();
+
         $sess = Mage::getSingleton("core/session", array('name' => 'frontend'));
         $customerSession = Mage::getSingleton('customer/session');
         $token = $request->getParam('token');
@@ -18,25 +19,30 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
             $sess->addError('The authentication request is missing its token.');
             return $this->_redirect('customer/account/login');
         }
+
         $active = Mage::getStoreConfig('unloq_login/status/active');
         if(!$active) {
             $sess->addNotice('UNLOQ.io authentication is temporary disabled.');
             return $this->_redirect('customer/account/login');
         }
+
         $config = Mage::getStoreConfig('unloq_login/api');
         $api = new UnloqApi($config['key'], $config['secret']);
+
         // Proceed to get the user from UNLOQ
         $result = $api->getLoginToken($token);
         if($result->error) {
             $sess->addError('UNLOQ: ' . $result->message);
             return $this->_redirect('customer/account/login');
         }
+
         $user = $result->data;
         // Sanity check for user id and email
         if(!isset($user['id']) || !isset($user['email'])) {
             $sess->addError('UNLOQ: Failed to perform authentication.');
             return $this->_redirect('customer/account/login');
         }
+
         $collection = Mage::getModel('customer/customer')->getCollection();
         $collection->addAttributeToSelect('firstname')
             ->addAttributeToSelect('lastname')
@@ -45,6 +51,7 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
             ->addAttributeToFilter('website_id', Mage::app()->getWebsite()->getId())
             ->addAttributeToFilter('store_id', Mage::app()->getStore()->getStoreId())
             ->addAttributeToFilter('email', $user['email']);
+
         // Step one, we try and find the user locally.
         $customer = $collection->getFirstItem();
         if($customer->isEmpty()) {

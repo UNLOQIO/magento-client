@@ -29,4 +29,24 @@ class Unloq_Login_Block_Account extends Mage_Core_Block_Template
         return parent::_toHtml();
     }
 
+    public function isAdminUnloqAllowed()
+    {
+        $usage = Mage::getStoreConfig('unloq_login/status/usage');
+        if($usage == Unloq_Login_Model_Login::ADMIN_LOGIN ||
+            $usage == Unloq_Login_Model_Login::CUSTOMER_AND_ADMIN_LOGIN) {
+            return true;
+        }
+        return false;
+    }
+
+    public function isCustomerUnloqAllowed()
+    {
+        $usage = Mage::getStoreConfig('unloq_login/status/usage');
+        if($usage == Unloq_Login_Model_Login::CUSTOMER_LOGIN ||
+            $usage == Unloq_Login_Model_Login::CUSTOMER_AND_ADMIN_LOGIN) {
+            return true;
+        }
+        return false;
+    }
+
 }
