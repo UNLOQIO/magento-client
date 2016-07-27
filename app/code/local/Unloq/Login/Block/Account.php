@@ -29,22 +29,44 @@ class Unloq_Login_Block_Account extends Mage_Core_Block_Template
         return parent::_toHtml();
     }
 
+    /**
+     * Will check if the module is enabled and that the admin
+     * login is set to be allowed from configuration
+     *
+     * @author Diana Botean <diana.botean@evozon.com>
+     * @return bool
+     * */
     public function isAdminUnloqAllowed()
     {
-        $usage = Mage::getStoreConfig('unloq_login/status/usage');
-        if($usage == Unloq_Login_Model_Login::ADMIN_LOGIN ||
-            $usage == Unloq_Login_Model_Login::CUSTOMER_AND_ADMIN_LOGIN) {
-            return true;
+        $active = Mage::getStoreConfig('unloq_login/status/active');
+        if($active) {
+            $usage = Mage::getStoreConfig('unloq_login/status/usage');
+            if ($usage == Unloq_Login_Model_Login::ADMIN_LOGIN ||
+                $usage == Unloq_Login_Model_Login::CUSTOMER_AND_ADMIN_LOGIN
+            ) {
+                return true;
+            }
         }
         return false;
     }
 
+    /**
+     * Will check if the module is enabled and that the customer
+     * login is set to be allowed from configuration
+     *
+     * @author Diana Botean <diana.botean@evozon.com>
+     * @return bool
+     * */
     public function isCustomerUnloqAllowed()
     {
-        $usage = Mage::getStoreConfig('unloq_login/status/usage');
-        if($usage == Unloq_Login_Model_Login::CUSTOMER_LOGIN ||
-            $usage == Unloq_Login_Model_Login::CUSTOMER_AND_ADMIN_LOGIN) {
-            return true;
+        $active = Mage::getStoreConfig('unloq_login/status/active');
+        if($active) {
+            $usage = Mage::getStoreConfig('unloq_login/status/usage');
+            if ($usage == Unloq_Login_Model_Login::CUSTOMER_LOGIN ||
+                $usage == Unloq_Login_Model_Login::CUSTOMER_AND_ADMIN_LOGIN
+            ) {
+                return true;
+            }
         }
         return false;
     }
