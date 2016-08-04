@@ -21,28 +21,5 @@ class Unloq_Login_Model_Observer {
         if($res->error) {
             throw new Mage_Core_Exception($res->message);//("API Setup failed.");
         }
-        if(!isset($status['installed']) || $status['installed'] == '0') {
-            //$this->installModule();
-        }
-    }
-
-    /**
-     * This acts as an installer. The first time the admin sets up the plugin script,
-     * we will execute our ALTER on the customer table, by adding the unloq_id field.
-     */
-    private function installModule() {
-        $config = Mage::getModel('core/config');
-        $res = Mage::getSingleton('core/resource');
-        $connection = $res->getConnection('core_write');
-        $table = $res->getTableName('customer_entity');
-        $i = $connection->addColumn($table, 'unloq_id', array(
-            'type'      => Varien_Db_Ddl_Table::TYPE_TEXT,
-            'nullable'  => true,
-            'length'    => 50,
-            'comment'   => 'UNLOQ.io remote id'
-        ));
-        if($i) {
-            $config->saveConfig('unloq_login/status/installed', '1');
-        }
     }
 }

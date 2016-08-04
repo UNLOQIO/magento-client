@@ -48,6 +48,8 @@
 <body id="page-login" onload="document.forms.loginForm.username.focus();">
     <div class="login-container">
         <div class="login-box">
+            <?php $unloqBlock = $this->getLayout()->createBlock("login/account");?>
+            <?php  if (!$unloqBlock->isAdminUnloqAllowed()) :?>
             <form method="post" action="" id="loginForm" autocomplete="off">
                 <div class="login-form">
                     <input name="form_key" type="hidden" value="<?php echo $this->getFormKey() ?>" />
@@ -69,9 +71,9 @@
                 </div>
                 <p class="legal"><?php echo Mage::helper('adminhtml')->__('Magento is a trademark of Magento Inc. Copyright &copy; %s Magento Inc.', date('Y')) ?></p>
             </form>
+            <?php endif;?>
             <div class="bottom"></div>
             <div class="account-login unloq-login">
-                <?php $unloqBlock = $this->getLayout()->createBlock("login/account");?>
                 <?php if ($unloqBlock->isAdminUnloqAllowed()) :?>
                     <div class="col-1">
                         <div class="content">

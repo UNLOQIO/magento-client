@@ -2,8 +2,14 @@
 class Unloq_Login_Block_Account extends Mage_Core_Block_Template
 {
 
-    public function __construct() {
+    public function __construct()
+    {
         require_once(Mage::getBaseDir('lib') . '/Unloq/UnloqApi.php');
+        if (Mage::app()->getStore()->isAdmin()) {
+            Mage::getModel('core/cookie')->set('unloq_login_type', Unloq_Login_Model_Login::ADMIN_AREA);
+        } else {
+            Mage::getModel('core/cookie')->set('unloq_login_type', Unloq_Login_Model_Login::CUSTOMER_AREA);
+        }
     }
 	/**
 	 * Returns the public plugin URL
