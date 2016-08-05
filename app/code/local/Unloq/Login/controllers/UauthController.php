@@ -13,26 +13,25 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
     {
         Mage::log("enters login action");
         $request = Mage::app()->getRequest();
-        if(Mage::getModel('core/cookie')->get('unloq_login_type'))
-        {
-            Mage::log("cookie exists");
+        if(Mage::getModel('core/cookie')->get('unloq_login_type')) {
             $area = Mage::getModel('core/cookie')->get('unloq_login_type');
             if ($area == Unloq_Login_Model_Login::ADMIN_AREA) {
+
                 Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
-                Mage::log("admin area cookie");
                 $sess = Mage::getSingleton("core/session", array('name' => 'adminhtml'));
                 $adminSession = Mage::getSingleton('admin/session');
                 $token = $request->getParam('token');
-                if(!$token) {
+                if (!$token) {
                     $sess->addError('The authentication request is missing its token.');
+
                     return $this->_redirect('adminhtml/index/login');
                 }
-                Mage::log("token is ".$token);
+                Mage::log("token is " . $token);
 
                 $active = Mage::getStoreConfig('unloq_login/status/active');
-                if(!$active) {
-                    Mage::log("module is active");
+                if (!$active) {
                     $sess->addNotice('UNLOQ.io authentication is temporary disabled.');
+
                     return $this->_redirect('adminhtml/index/login');
                 }
 
@@ -42,59 +41,66 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
                 // Proceed to get the user from UNLOQ
                 $result = $api->getLoginToken($token);
 
-                if($result->error) {
+                if ($result->error) {
                     $sess->addError('UNLOQ: ' . $result->message);
                     Mage::log($result->message);
+
                     return $this->_redirect('adminhtml/index/login');
                 }
 
                 $user = $result->data;
-                Mage::log("user data:");
+                Mage::log("UNLOQ returned user data:");
                 Mage::log($user);
-                // Sanity check for user id and email
-                if(!isset($user['id']) || !isset($user['email'])) {
+                // check if returned data is valid
+                if (!isset($user['id']) || !isset($user['email'])) {
                     $sess->addError('UNLOQ: Failed to perform authentication.');
                     Mage::log('UNLOQ: Failed to perform authentication.');
+
                     return $this->_redirect('adminhtml/index/login');
                 }
 
-                $collection = Mage::getModel('admin/user')->getCollection();
-                $collection->addFieldToSelect('*')
-                    ->addFieldToFilter('email', $user['email']);
+                // find the user locally
 
-                // Step one, we try and find the user locally.
-                $admin = $collection->getFirstItem();
-                $adminId = $admin->getUserId();
-                $admin = Mage::getModel("admin/user")->load($adminId);
-                if($admin->isEmpty()) {
-                    if(!$admin) {
+                // tweak load use for later admin save operation
+                $admin = Mage::getModel("admin/user")->load($user['email'], 'email');
+                if (!$admin->getId()) {
+                    if (!$admin) {
                         $sess->addError('There is no admin user with this email. Please try again.');
                         Mage::log('There is no admin user with this email. Please try again.');
+
                         return $this->_redirect('adminhtml/index/login');
                     }
                 } else {
-                    Mage::log('we have an admin');
-                    // If we do have an admin user, we check if his account is disabled. If so, we stop.
+                    // check if the admin user is active and that is assigned to an ACL role
                     $isActive = $admin->getIsActive();
-                    Mage::log('admin is active:   ' . $isActive);
-                    if(!$isActive) {
+                    if (!$isActive) {
                         $sess->addNotice("Your account has been disabled.");
                         Mage::log("Your account has been disabled.");
+
                         return $this->_redirect('adminhtml/index/login');
                     }
                     if (!Mage::getModel("admin/user")->hasAssigned2Role($admin->getId())) {
                         $sess->addError('Access denied.');
                         Mage::log('Access denied.');
+
                         return $this->_redirect('adminhtml/index/login');
                     }
-                    if(!$this->updateAdmin($admin, $user)) {
+                    if (!$this->updateAdmin($admin, $user)) {
                         $sess->addError('Failed to update data. Please try again.');
                         Mage::log('Failed to update data. Please try again.');
+
                         return $this->_redirect('adminhtml/index/login');
                     }
                 }
 
-                Mage::log('Now we try to login the admin');
+                Mage::log('try to login the admin');
+
+                /** @var $user Mage_Admin_Model_User */
+//                $user = Mage::getModel('admin/user');
+//                $user->authenticate('diana', 'w13di89');
+
+                $adminSession->renewSession();
+                if (Mage::getSingleton('adminhtml/url')->useSecretKey()) {
                     Mage::getSingleton('adminhtml/url')->renewSecretUrls();
                 }
                 $adminSession->setIsFirstPageAfterLogin(true);
@@ -104,23 +110,29 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
                 Mage::dispatchEvent('admin_session_user_login_success', array('user' => $admin));
 
                 if ($adminSession->isLoggedIn()) {
-                    Mage::log('Admin logged in');
+                    Mage::log('admin logged in successfully');
                     $duration = (int)Mage::getStoreConfig('admin/security/session_cookie_lifetime');
-                    Mage::log("duration " . $duration);
                     $sessionId = $adminSession->getSessionId();
-                    Mage::log("session id" . $sessionId);
                     $api->sendTokenSession($token, $sessionId, $duration);
 
-                   $redirectUrl = Mage::getSingleton('adminhtml/url')
-                    ->getUrl($admin->getStartupPageUrl(), array('_current' => false));
+                    $redirectUrl = Mage::getSingleton('adminhtml/url')
+                        ->getUrl($admin->getStartupPageUrl(), array('_current' => false));
                     $adminSession->refreshAcl();
-                    Mage::log("Redirecting user to dashboard: " . $redirectUrl);
-                    header('Location: ' . $redirectUrl);
-                    die();
+                    Mage::log("redirecting user to dashboard: " . $redirectUrl);
+                    Mage::app()->removeCache(Mage_Adminhtml_Block_Notification_Security::VERIFICATION_RESULT_CACHE_KEY);
+//                    header('Location: ' . $redirectUrl);
+//                    die();
+                    Mage::app()->getResponse()
+                        ->clearHeaders()
+                        ->setRedirect($redirectUrl)
+                        ->sendHeaders()
+                    ;
+                    exit;
 
-                }   else {
+                } else {
                     $sess->addError("Failed to log you in. Please try again.");
                     Mage::log("Failed to log you in. Please try again.");
+
                     return $this->_redirect('adminhtml/index/login');
                 }
 
@@ -128,14 +140,16 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
                 $sess = Mage::getSingleton("core/session", array('name' => 'frontend'));
                 $customerSession = Mage::getSingleton('customer/session');
                 $token = $request->getParam('token');
-                if(!$token) {
+                if (!$token) {
                     $sess->addError('The authentication request is missing its token.');
+
                     return $this->_redirect('customer/account/login');
                 }
 
                 $active = Mage::getStoreConfig('unloq_login/status/active');
-                if(!$active) {
+                if (!$active) {
                     $sess->addNotice('UNLOQ.io authentication is temporary disabled.');
+
                     return $this->_redirect('customer/account/login');
                 }
 
@@ -145,15 +159,17 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
                 // Proceed to get the user from UNLOQ
                 $result = $api->getLoginToken($token);
 
-                if($result->error) {
+                if ($result->error) {
                     $sess->addError('UNLOQ: ' . $result->message);
+
                     return $this->_redirect('customer/account/login');
                 }
 
                 $user = $result->data;
                 // Sanity check for user id and email
-                if(!isset($user['id']) || !isset($user['email'])) {
+                if (!isset($user['id']) || !isset($user['email'])) {
                     $sess->addError('UNLOQ: Failed to perform authentication.');
+
                     return $this->_redirect('customer/account/login');
                 }
 
@@ -168,38 +184,42 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
 
                 // Step one, we try and find the user locally.
                 $customer = $collection->getFirstItem();
-                if($customer->isEmpty()) {
+                if ($customer->isEmpty()) {
                     $customer = $this->createCustomer($user);
-                    if(!$customer) {
+                    if (!$customer) {
                         $sess->addError('Failed to create account. Please try again.');
+
                         return $this->_redirect('customer/account/login');
                     }
                 } else {
                     // If we do have a customer, we check if his account is disabled. If so, we stop.
                     $isActive = (bool)$customer->getIsActive();
-                    if(!$isActive) {
+                    if (!$isActive) {
                         $sess->addNotice("Your account has been disabled.");
+
                         return $this->_redirect('customer/account/login');
                     }
-                    if(!$this->updateCustomer($customer, $user)) {
+                    if (!$this->updateCustomer($customer, $user)) {
                         $sess->addError('Failed to update data. Please try again.');
+
                         return $this->_redirect('customer/account/login');
                     }
                 }
                 // At this point, we create the session and log the user in.
-                if(!$customerSession->loginById($customer->getId())) {
+                if (!$customerSession->loginById($customer->getId())) {
                     $sess->addError("Failed to log you in. Please try again.");
+
                     return $this->_redirect('customer/account/login');
                 }
                 // Finally, we send the session ID for remote logout.
-                $duration = (int) Mage::getStoreConfig('web/cookie/cookie_lifetime');
+                $duration = (int)Mage::getStoreConfig('web/cookie/cookie_lifetime');
                 $sessionId = $customerSession->getSessionId();
                 $api->sendTokenSession($token, $sessionId, $duration);
                 // Everything is done, we can just redirect back to account
                 $redirect = (!$customer->getFirstname() || !$customer->getLastname()) ? "customer/account/edit" : "customer/account";
                 $this->_redirect($redirect);
             }
-
+        }
     }
 
 
@@ -318,7 +338,7 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
      * */
     private function updateAdmin($admin, $user) {
         if(!$admin->getUnloqId()) {
-            Mage::log("Set unloq id on admin");
+            Mage::log("set unloq id on admin");
             $admin->setData("unloq_id", $user['id']);
             try {
                 $admin->save();
@@ -329,7 +349,7 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
                 return false;
             }
         } else {
-            Mage::log("Admin has already an unloq id");
+            Mage::log("admin has already an unloq id, skip update");
             return true;
         }
     }
