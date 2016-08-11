@@ -5,6 +5,17 @@
             <version>0.1.1</version>
         </Unloq_Login>
     </modules>
+    <!--<admin>-->
+        <!--<routers>-->
+            <!--<adminhtml>-->
+                <!--<args>-->
+                    <!--<modules>-->
+                        <!--<unloq_login before="Mage_Adminhtml">Unloq_Login_Adminhtml</unloq_login>-->
+                    <!--</modules>-->
+                <!--</args>-->
+            <!--</adminhtml>-->
+        <!--</routers>-->
+    <!--</admin>-->
     <global>
         <models>
             <login>
@@ -52,6 +63,14 @@
                     </login>
                 </observers>
             </admin_system_config_changed_section_unloq_login>
+            <controller_action_predispatch_unloq_uauth_login>
+                <observers>
+                    <login_area>
+                        <class>login/observer</class>
+                        <method>loginPreDispatch</method>
+                    </login_area>
+                </observers>
+            </controller_action_predispatch_unloq_uauth_login>
         </events>
     </global>
 	<frontend>

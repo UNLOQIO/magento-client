@@ -22,4 +22,21 @@ class Unloq_Login_Model_Observer {
             throw new Mage_Core_Exception($res->message);//("API Setup failed.");
         }
     }
+
+    /**
+     * Will change the namespace and event area of unloq
+     *
+     * @author Diana Botean <diana.botean@evozon.com>
+     * @param Varien_Event_Observer $observer
+     */
+    public function loginPreDispatch(Varien_Event_Observer $observer)
+    {
+        if(Mage::getModel('core/cookie')->get('unloq_login_type')) {
+            $area = Mage::getModel('core/cookie')->get('unloq_login_type');
+            if ($area == Unloq_Login_Model_Login::ADMIN_AREA) {
+                //get the controller action method
+                $controller = $observer->getEvent()->getControllerAction();
+            }
+        }
+    }
 }

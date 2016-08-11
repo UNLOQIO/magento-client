@@ -5,6 +5,28 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
 {
 
     /**
+     * Predispatch: should set layout area
+     *
+     * @return Mage_Core_Controller_Front_Action
+     */
+    public function preDispatch()
+    {
+
+        parent::preDispatch();
+
+        if(Mage::getModel('core/cookie')->get('unloq_login_type')) {
+            $area = Mage::getModel('core/cookie')->get('unloq_login_type');
+            if ($area == Unloq_Login_Model_Login::ADMIN_AREA) {
+                $this->getLayout()->setArea("adminhtml");
+                $this->_currentArea = "adminhtml";
+                $this->_sessionNamespace = "adminhtml";
+            }
+        }
+        return $this;
+
+    }
+
+    /**
      * Implementing the Unloq auth protocol, this route is called when a user is redirected back to us
      * with a valid access token found in the querystring. We then proceed to request the user information
      * from UNLOQ, and, based on the resulting user from the local database, we create it or just log him in.
@@ -17,21 +39,18 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
             $area = Mage::getModel('core/cookie')->get('unloq_login_type');
             if ($area == Unloq_Login_Model_Login::ADMIN_AREA) {
 
-                Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
-                $sess = Mage::getSingleton("core/session", array('name' => 'adminhtml'));
+                $sess = Mage::getSingleton("core/session", array('name' => 'adminhtml'))->start();
                 $adminSession = Mage::getSingleton('admin/session');
+
                 $token = $request->getParam('token');
                 if (!$token) {
                     $sess->addError('The authentication request is missing its token.');
-
                     return $this->_redirect('adminhtml/index/login');
                 }
-                Mage::log("token is " . $token);
 
                 $active = Mage::getStoreConfig('unloq_login/status/active');
                 if (!$active) {
                     $sess->addNotice('UNLOQ.io authentication is temporary disabled.');
-
                     return $this->_redirect('adminhtml/index/login');
                 }
 
@@ -40,7 +59,6 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
 
                 // Proceed to get the user from UNLOQ
                 $result = $api->getLoginToken($token);
-
                 if ($result->error) {
                     $sess->addError('UNLOQ: ' . $result->message);
                     Mage::log($result->message);
@@ -49,8 +67,6 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
                 }
 
                 $user = $result->data;
-                Mage::log("UNLOQ returned user data:");
-                Mage::log($user);
                 // check if returned data is valid
                 if (!isset($user['id']) || !isset($user['email'])) {
                     $sess->addError('UNLOQ: Failed to perform authentication.');
@@ -58,8 +74,6 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
 
                     return $this->_redirect('adminhtml/index/login');
                 }
-
-                // find the user locally
 
                 // tweak load use for later admin save operation
                 $admin = Mage::getModel("admin/user")->load($user['email'], 'email');
@@ -93,41 +107,38 @@ class Unloq_Login_UauthController extends Mage_Core_Controller_Front_Action
                     }
                 }
 
-                Mage::log('try to login the admin');
-
-                /** @var $user Mage_Admin_Model_User */
-//                $user = Mage::getModel('admin/user');
-//                $user->authenticate('diana', 'w13di89');
-
                 $adminSession->renewSession();
                 if (Mage::getSingleton('adminhtml/url')->useSecretKey()) {
                     Mage::getSingleton('adminhtml/url')->renewSecretUrls();
                 }
+
+                $sesId = isset($_COOKIE['adminhtml']) ? $_COOKIE['adminhtml'] : false ;
+                $adminSession->setSessionId($sesId);
                 $adminSession->setIsFirstPageAfterLogin(true);
                 $adminSession->setUser($admin);
                 $adminSession->setAcl(Mage::getResourceModel('admin/acl')->loadAcl());
-
-                Mage::dispatchEvent('admin_session_user_login_success', array('user' => $admin));
+                $adminSession->refreshAcl();
 
                 if ($adminSession->isLoggedIn()) {
                     Mage::log('admin logged in successfully');
                     $duration = (int)Mage::getStoreConfig('admin/security/session_cookie_lifetime');
                     $sessionId = $adminSession->getSessionId();
+                    Mage::log("session id ".$sessionId);
                     $api->sendTokenSession($token, $sessionId, $duration);
+
+                    Mage::app()->removeCache(Mage_Adminhtml_Block_Notification_Security::VERIFICATION_RESULT_CACHE_KEY);
 
                     $redirectUrl = Mage::getSingleton('adminhtml/url')
                         ->getUrl($admin->getStartupPageUrl(), array('_current' => false));
-                    $adminSession->refreshAcl();
-                    Mage::log("redirecting user to dashboard: " . $redirectUrl);
-                    Mage::app()->removeCache(Mage_Adminhtml_Block_Notification_Security::VERIFICATION_RESULT_CACHE_KEY);
-//                    header('Location: ' . $redirectUrl);
-//                    die();
+
+                    Mage::log("redirecting user to: " . $redirectUrl);
+                    Mage::dispatchEvent('admin_session_user_login_success', array('user' => $admin));
+
+                    $sess->addSuccess("Successfully logged in with UNLOQ.");
                     Mage::app()->getResponse()
                         ->clearHeaders()
                         ->setRedirect($redirectUrl)
-                        ->sendHeaders()
-                    ;
-                    exit;
+                        ->sendHeaders();
 
                 } else {
                     $sess->addError("Failed to log you in. Please try again.");

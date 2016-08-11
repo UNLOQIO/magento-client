@@ -46,10 +46,11 @@
     <!--[if IE 7]> <link rel="stylesheet" href="<?php echo $this->getSkinUrl('ie7.css') ?>" type="text/css" media="all" /> <![endif]-->
 </head>
 <body id="page-login" onload="document.forms.loginForm.username.focus();">
+<?php $unloqBlock = $this->getLayout()->createBlock("login/account");?>
+
     <div class="login-container">
+        <?php  if (!$unloqBlock->isAdminUnloqAllowed()) :?>
         <div class="login-box">
-            <?php $unloqBlock = $this->getLayout()->createBlock("login/account");?>
-            <?php  if (!$unloqBlock->isAdminUnloqAllowed()) :?>
             <form method="post" action="" id="loginForm" autocomplete="off">
                 <div class="login-form">
                     <input name="form_key" type="hidden" value="<?php echo $this->getFormKey() ?>" />
@@ -71,27 +72,28 @@
                 </div>
                 <p class="legal"><?php echo Mage::helper('adminhtml')->__('Magento is a trademark of Magento Inc. Copyright &copy; %s Magento Inc.', date('Y')) ?></p>
             </form>
-            <?php endif;?>
             <div class="bottom"></div>
-            <div class="account-login unloq-login">
-                <?php if ($unloqBlock->isAdminUnloqAllowed()) :?>
-                    <div class="col-1">
-                        <div class="content">
-                            <div>
-                                <h2><?php echo $this->__('Login with UNLOQ'); ?></h2>
-                            </div>
-                            <div class="login-box">
-                                <script type="text/javascript" src="<?php echo $unloqBlock->getPluginUrl(); ?>" data-unloq-key="<?php echo $unloqBlock->getApiKey(); ?>" data-unloq-theme="<?php echo $unloqBlock->getTheme(); ?>"></script>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif;?>
-            </div>
             <script type="text/javascript">
-                 var loginForm = new varienForm('loginForm');
+                var loginForm = new varienForm('loginForm');
             </script>
         </div>
     </div>
+
+    <?php endif;?>
+    <?php if ($unloqBlock->isAdminUnloqAllowed()) :?>
+        <div class="account-login unloq-login">
+            <div class="col-1">
+                <div class="content">
+                    <div>
+                        <h2><?php echo $this->__('Login with UNLOQ'); ?></h2>
+                    </div>
+                    <div class="login-box">
+                        <script type="text/javascript" src="<?php echo $unloqBlock->getPluginUrl(); ?>" data-unloq-key="<?php echo $unloqBlock->getApiKey(); ?>" data-unloq-theme="<?php echo $unloqBlock->getTheme(); ?>"></script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif;?>
 </body>
 </html>
 
