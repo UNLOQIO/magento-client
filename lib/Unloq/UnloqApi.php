@@ -22,14 +22,18 @@ class UnloqApi
     /*
      * Returns the logout hook in relation to the board url.
      * */
-    public function getHook($type) {
+    public function getHook($type, $includeDomain) {
         $base = Mage::getBaseUrl();
-        $tmp = explode("://", $base);
-        $tmp = $tmp[1];
-        $pathIdx = strpos($tmp, "/", 0);
-        $path = substr($tmp, $pathIdx);
-        if($path[strlen($path)-1] == "/") {
-            $path = substr($path, 0, strlen($path)-1);
+        if($includeDomain) {
+            $path = $base;
+        } else {
+            $tmp = explode("://", $base);
+            $tmp = $tmp[1];
+            $pathIdx = strpos($tmp, "/", 0);
+            $path = substr($tmp, $pathIdx);
+            if($path[strlen($path)-1] == "/") {
+                $path = substr($path, 0, strlen($path)-1);
+            }
         }
         switch($type) {
             case "login":
@@ -141,8 +145,8 @@ class UnloqApi
      * */
     public function updateHooks() {
         $data = array(
-            'login' => $this->getHook('login'),
-            'logout' => $this->getHook('logout')
+            'login' => $this->getHook('login', true),
+            'logout' => $this->getHook('logout', true)
         );
         return $this->request("POST", "/settings/webhooks", $data);
     }

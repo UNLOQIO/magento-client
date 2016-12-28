@@ -46,10 +46,11 @@
 							<p>
 							<b>Steps for enabling the UNLOQ plugin on this website:</b><br/>
 							1. Login to UNLOQ<br/>
-							2. Create and verify your domain <br/>
-							3. Create an application with this domain <br/>
-							4. Configure the application <br/>
-							5. Enter the API Key and API Secret of your app bellow.
+							2. Create a Magento Web Application with this domain <br/>
+							3. Configure the application <br />
+							4. Go to the application's Settings > Widgets section and verify your domain <br/>
+							5. Go to the application's Settings > General > API Keys and add a new key <br />
+							6. Enter the API Key and Login Widget Key of your app below <br />
 							</p>
 							<br/>
 						]]>
@@ -61,7 +62,7 @@
 					<show_in_store>1</show_in_store>
 					<fields>
 						<key>
-							<label>Application API Key</label>
+							<label>Login Widget Key</label>
 							<frontend_type>text</frontend_type>
 							<sort_order>1</sort_order>
 							<show_in_default>1</show_in_default>
@@ -69,7 +70,7 @@
 							<show_in_store>1</show_in_store>
 						</key>
 						<secret>
-							<label>Application API Secret</label>
+							<label>API Key</label>
 							<frontend_type>text</frontend_type>
 							<sort_order>2</sort_order>
 							<show_in_default>1</show_in_default>
