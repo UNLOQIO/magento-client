@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package>
-	<name>Unloq_Login</name>
-	<version>0.3.0</version>
+	<name>UNLOQ</name>
+	<version>1.0.0</version>
 	<stability>stable</stability>
-	<license uri="http://opensource.org/licenses/OSL-3.0">OSL-3.0</license>
-	<channel>community</channel>
+   <channel>community</channel>
+	<license uri="http://opensource.org/licenses/OSL-3.0.php">OSL</license>
 	<extends/>
 	<summary>UNLOQ.io Passwordless authentication</summary>
 	<description>UNLOQ.io passwordless authentication handled by your phone. For a free account, go to
@@ -13,9 +13,9 @@
 	<notes>Updated the API calls</notes>
 	<authors>
 		<author>
-			<name>UNLOQ.io Team</name>
+			<name>Adrian Bunta</name>
 			<user>unloqer</user>
-			<email>team@unloq.io</email>
+			<email>adrian@unloq.io</email>
 		</author>
 	</authors>
 	<date>2016-12-29</date>
